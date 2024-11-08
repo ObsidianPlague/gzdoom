@@ -1171,7 +1171,7 @@ static void S_AddSNDINFO (int lump)
 
 static void S_AddBloodSFX (int lumpnum)
 {
-	FMemLump sfxlump = fileSystem.ReadLump(lumpnum);
+	auto sfxlump = fileSystem.ReadFile(lumpnum);
 	const FBloodSFX *sfx = (FBloodSFX *)sfxlump.GetMem();
 	int rawlump = fileSystem.CheckNumForName(sfx->RawName, ns_bloodraw);
 	int sfxnum;
@@ -1182,11 +1182,11 @@ static void S_AddBloodSFX (int lumpnum)
 		sfxnum = S_AddSound(name, rawlump);
 		if (sfx->Format == 5)
 		{
-			soundSystem->S_sfx[sfxnum].bForce22050 = true;
+			soundSystem->S_sfx[sfxnum].RawRate = 22050;
 		}
 		else // I don't know any other formats for this
 		{
-			soundSystem->S_sfx[sfxnum].bForce11025 = true;
+			soundSystem->S_sfx[sfxnum].RawRate = 11025;
 		}
 		soundSystem->S_sfx[sfxnum].bLoadRAW = true;
 		soundSystem->S_sfx[sfxnum].LoopStart = LittleLong(sfx->LoopStart);
