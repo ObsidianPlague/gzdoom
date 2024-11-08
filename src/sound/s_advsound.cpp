@@ -607,6 +607,10 @@ void S_ParseSndInfo (bool redefine)
 			}
 			break;
 
+		case ns_bloodsfx:
+			S_AddBloodSFX (lump);
+			break;
+
 		case ns_strifevoices:
 			S_AddStrifeVoice (lump);
 			break;
@@ -1153,6 +1157,49 @@ static void S_AddSNDINFO (int lump)
 			sc.MustGetString ();
 			S_AddSound (name.GetChars(), sc.String, &sc);
 		}
+	}
+}
+
+//==========================================================================
+//
+// S_AddBloodSFX
+//
+// Registers a new sound with the name "<lumpname>.sfx"
+// Actual sound data is searched for in the ns_bloodraw namespace.
+//
+//==========================================================================
+
+static void S_AddBloodSFX (int lumpnum)
+{
+	FMemLump sfxlump = fileSystem.ReadLump(lumpnum);
+	const FBloodSFX *sfx = (FBloodSFX *)sfxlump.GetMem();
+	int rawlump = fileSystem.CheckNumForName(sfx->RawName, ns_bloodraw);
+	int sfxnum;
+
+	if (rawlump != -1)
+	{
+		const char *name = fileSystem.GetLumpFullName(lumpnum);
+		sfxnum = S_AddSound(name, rawlump);
+		if (sfx->Format == 5)
+		{
+			soundSystem->S_sfx[sfxnum].bForce22050 = true;
+		}
+		else // I don't know any other formats for this
+		{
+			soundSystem->S_sfx[sfxnum].bForce11025 = true;
+		}
+		soundSystem->S_sfx[sfxnum].bLoadRAW = true;
+		soundSystem->S_sfx[sfxnum].LoopStart = LittleLong(sfx->LoopStart);
+		// Make an ambient sound out of it, whether it has a loop point
+		// defined or not. (Because none of the standard Blood ambient
+		// sounds are explicitly defined as looping.)
+		FAmbientSound *ambient = &Ambients[fileSystem.GetLumpIndexNum(lumpnum)];
+		ambient->type = CONTINUOUS;
+		ambient->periodmin = 0;
+		ambient->periodmax = 0;
+		ambient->volume = 1;
+		ambient->attenuation = 1;
+		ambient->sound = name;
 	}
 }
 
